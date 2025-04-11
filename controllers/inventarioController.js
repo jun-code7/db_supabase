@@ -79,9 +79,28 @@ export const eliminarCategoria = async (req, res) => {
 
 // ITEMS
 export const obtenerItems = async (req, res) => {
-  const { rows } = await db.query('SELECT * FROM items');
-  res.json(rows);
+  try {
+    const { rows } = await db.query(`
+      SELECT i.*, c.nombre AS categoria_nombre
+      FROM items i
+      LEFT JOIN categorias c ON i.categoria_id = c.id
+    `);
+
+    // Transformamos los resultados para incluir un objeto "categoria"
+    const itemsConCategoria = rows.map(item => ({
+      ...item,
+      categoria: {
+        nombre: item.categoria_nombre
+      }
+    }));
+
+    res.json(itemsConCategoria);
+  } catch (error) {
+    console.error('Error al obtener los ítems:', error);
+    res.status(500).json({ error: 'Error al obtener los ítems' });
+  }
 };
+
 
 // Crear un nuevo ítem
 export const crearItem = async (req, res) => {

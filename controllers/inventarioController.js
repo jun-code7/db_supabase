@@ -174,10 +174,27 @@ export const eliminarItem = async (req, res) => {
 
 
 // MOVIMIENTOS INVENTARIO
+
+// export const obtenerMovimientos = async (req, res) => {
+//   const { rows } = await db.query('SELECT * FROM movimientos_inventario');
+//   res.json(rows);
+// };  
+
 export const obtenerMovimientos = async (req, res) => {
-  const { rows } = await db.query('SELECT * FROM movimientos_inventario');
-  res.json(rows);
+  try {
+    const { rows } = await db.query(`
+      SELECT m.*, i.nombre AS item_nombre
+      FROM movimientos_inventario m
+      JOIN items i ON m.item_id = i.id
+      ORDER BY m.fecha DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener movimientos:', error);
+    res.status(500).json({ message: 'Error al obtener movimientos' });
+  }
 };
+
 
 export const crearMovimiento = async (req, res) => {
   const { id_item, tipo_movimiento, cantidad } = req.body;

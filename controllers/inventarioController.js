@@ -179,6 +179,7 @@ export const eliminarItem = async (req, res) => {
 //   const { rows } = await db.query('SELECT * FROM movimientos_inventario');
 //   res.json(rows);
 // };  
+// controllers/movimientosController.js
 
 export const obtenerMovimientos = async (req, res) => {
   try {
@@ -186,7 +187,7 @@ export const obtenerMovimientos = async (req, res) => {
       SELECT m.*, i.nombre AS item_nombre
       FROM movimientos_inventario m
       JOIN items i ON m.item_id = i.id
-      ORDER BY m.fecha DESC
+      ORDER BY m.fecha_movimiento DESC
     `);
     res.json(rows);
   } catch (error) {

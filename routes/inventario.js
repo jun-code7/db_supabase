@@ -10,12 +10,14 @@ import {
   actualizarItem,
   eliminarItem,
   actualizarCategoria,
-  eliminarCategoria
+  eliminarCategoria,
+  obtenerCategoriaPorId
 } from '../controllers/inventarioController.js';
 
 const router = express.Router();
 
 // Categorías
+router.get('/categorias/:id' ,obtenerCategoriaPorId);
 router.get('/categorias', obtenerCategorias);
 router.post('/categorias', crearCategoria);
 router.put('/categorias/:id', actualizarCategoria);

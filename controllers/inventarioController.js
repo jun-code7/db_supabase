@@ -7,6 +7,24 @@ export const obtenerCategorias = async (req, res) => {
   res.json(rows);
 };
 
+export const obtenerCategoriaPorId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { rows } = await db.query('SELECT * FROM categorias WHERE id = $1', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ mensaje: 'Categoría no encontrada' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener la categoría:', error);
+    res.status(500).json({ error: 'Error al obtener la categoría' });
+  }
+};
+
+
 export const crearCategoria = async (req, res) => {
   const { nombre, descripcion } = req.body;
 
@@ -79,14 +97,24 @@ export const eliminarCategoria = async (req, res) => {
 
 // ITEMS
 export const obtenerItems = async (req, res) => {
+  const { categoria_id } = req.query; // 👈 Leemos el parámetro desde la URL
+
   try {
-    const { rows } = await db.query(`
+    let query = `
       SELECT i.*, c.nombre AS categoria_nombre
       FROM items i
       LEFT JOIN categorias c ON i.categoria_id = c.id
-    `);
+    `;
+    const values = [];
 
-    // Transformamos los resultados para incluir un objeto "categoria"
+    if (categoria_id) {
+      query += ' WHERE i.categoria_id = $1'; // 👈 Agregamos filtro si viene el ID
+      values.push(categoria_id); // 👈 Parametrizamos para evitar inyección SQL
+    }
+
+    const { rows } = await db.query(query, values);
+
+    // Mapeamos los resultados para incluir el nombre de la categoría
     const itemsConCategoria = rows.map(item => ({
       ...item,
       categoria: {
@@ -197,24 +225,23 @@ export const obtenerMovimientos = async (req, res) => {
 };
 
 
-export const crearMovimiento = async (req, res) => {
-  const { id_item, tipo_movimiento, cantidad } = req.body;
+export const crearMovimiento = async (req, res) => {  
+  const { item_id, tipo_movimiento, cantidad, observaciones} = req.body;
 
-  if (!id_item || !tipo_movimiento || cantidad == null) {
+  if (!item_id || !tipo_movimiento || cantidad == null ||!observaciones){
     return res.status(400).json({ error: 'Faltan campos requeridos: id_item, tipo_movimiento y cantidad' });
   }
 
   try {
     const { rows } = await db.query(
-      'INSERT INTO movimientos_inventario (id_item, tipo_movimiento, cantidad) VALUES ($1, $2, $3) RETURNING *',
-      [id_item, tipo_movimiento, cantidad]
+      'INSERT INTO movimientos_inventario (item_id, tipo_movimiento, cantidad, observaciones )VALUES ($1, $2, $3, $4) RETURNING *',
+      [item_id, tipo_movimiento, cantidad, observaciones]
     );
-
     res.status(201).json(rows[0]);
-  } catch (error) {
-    console.error('Error al crear movimiento:', error);
-    res.status(500).json({ error: 'Error al registrar el movimiento de inventario' });
-  }
+    } catch (error) {
+      console.error('Error al crear movimiento:', error);
+      res.status(500).json({ error: 'Error al registrar el movimiento de inventario' });
+    }
 };
 
 
